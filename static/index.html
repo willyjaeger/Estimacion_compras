@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte de Stock — Mister Nut</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f4f6fb;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.09);
+    width: 100%;
+    max-width: 560px;
+    padding: 2rem;
+  }
+  .logo-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: #002060;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 22px; height: 22px; fill: #fff; }
+  .logo-text h1 { font-size: 17px; font-weight: 600; color: #002060; line-height: 1.2; }
+  .logo-text p { font-size: 12px; color: #888; }
+
+  .zone {
+    border: 2px dashed #d0d7e8;
+    border-radius: 12px;
+    background: #f8faff;
+    padding: 1.2rem;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    text-align: center;
+  }
+  .zone:hover, .zone.over { border-color: #002060; background: #eef2fb; }
+  .zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .zone-icon { font-size: 28px; margin-bottom: 6px; }
+  .zone-title { font-size: 14px; font-weight: 600; color: #1a2340; margin-bottom: 2px; }
+  .zone-hint { font-size: 12px; color: #999; }
+  .badge-req {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    background: #fde8e8; color: #c0392b;
+    border-radius: 99px; padding: 2px 7px; margin-left: 5px;
+  }
+  .chips { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+  .chip {
+    display: flex; align-items: center; gap: 8px;
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 8px; padding: 5px 10px;
+    font-size: 12px; color: #444; text-align: left;
+  }
+  .chip-icon { font-size: 16px; flex-shrink: 0; }
+  .chip-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip-rm { cursor: pointer; color: #bbb; font-size: 16px; line-height: 1; flex-shrink: 0; }
+  .chip-rm:hover { color: #e74c3c; }
+
+  .btn {
+    width: 100%; padding: 0.85rem;
+    background: #002060; color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer; margin-top: 6px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: opacity 0.2s;
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:not(:disabled):hover { opacity: 0.87; }
+
+  .status {
+    margin-top: 16px; border-radius: 10px;
+    padding: 14px 16px; font-size: 13px; line-height: 1.6;
+    display: none;
+  }
+  .status.visible { display: block; }
+  .status.info { background: #eef2fb; color: #1a2340; border: 1px solid #c5d0ea; }
+  .status.error { background: #fde8e8; color: #7b1a1a; border: 1px solid #f5b7b7; }
+  .status.success { background: #e6f9f0; color: #145a32; border: 1px solid #a9dfbf; }
+
+  .steps { list-style: none; }
+  .steps li { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+  .steps li .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .step-done .dot { background: #27ae60; }
+  .step-active .dot { background: #002060; animation: pulse 1s infinite; }
+  .step-pending .dot { background: #ccc; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin 0.7s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .dl-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #27ae60; color: #fff;
+    border-radius: 8px; padding: 8px 16px;
+    font-size: 13px; font-weight: 600;
+    text-decoration: none; margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo-bar">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 3h18v4H3zM3 10h18v4H3zM3 17h18v4H3z"/></svg>
+    </div>
+    <div class="logo-text">
+      <h1>Control de Stock</h1>
+      <p>Mister Nut — Reporte automático</p>
+    </div>
+  </div>
+
+  <!-- FOTOS -->
+  <div class="zone" id="dz-fotos"
+    ondragover="over(event,'dz-fotos')" ondragleave="out('dz-fotos')" ondrop="drop(event,'fotos')">
+    <input type="file" accept="image/*" multiple onchange="add('fotos',this.files)" onclick="this.value=''">
+    <div class="zone-icon">📷</div>
+    <div class="zone-title">Fotos de stock físico <span class="badge-req">obligatorio</span></div>
+    <div class="zone-hint">JPG o PNG — podés arrastrar varias fotos a la vez</div>
+    <div class="chips" id="chips-fotos"></div>
+  </div>
+
+  <!-- PDF -->
+  <div class="zone" id="dz-pdf"
+    ondragover="over(event,'dz-pdf')" ondragleave="out('dz-pdf')" ondrop="drop(event,'pdf')">
+    <input type="file" accept=".pdf" onchange="add('pdf',this.files)" onclick="this.value=''">
+    <div class="zone-icon">📄</div>
+    <div class="zone-title">Planificado Full <span class="badge-req">obligatorio</span></div>
+    <div class="zone-hint">Archivo PDF</div>
+    <div class="chips" id="chips-pdf"></div>
+  </div>
+
+  <!-- EXCEL -->
+  <div class="zone" id="dz-excel"
+    ondragover="over(event,'dz-excel')" ondragleave="out('dz-excel')" ondrop="drop(event,'excel')">
+    <input type="file" accept=".xlsm,.xlsx" onchange="add('excel',this.files)" onclick="this.value=''">
+    <div class="zone-icon">📊</div>
+    <div class="zone-title">Estadísticas de ventas <span class="badge-req">obligatorio</span></div>
+    <div class="zone-hint">Archivo XLSM o XLSX</div>
+    <div class="chips" id="chips-excel"></div>
+  </div>
+
+  <button class="btn" id="btn" disabled onclick="generar()">
+    ✨ Generar reporte
+  </button>
+
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+const S = { fotos: [], pdf: [], excel: [] };
+
+function over(e, id) { e.preventDefault(); document.getElementById(id).classList.add('over'); }
+function out(id) { document.getElementById(id).classList.remove('over'); }
+function drop(e, slot) { e.preventDefault(); out('dz-'+slot); add(slot, e.dataTransfer.files); }
+
+function add(slot, files) {
+  if (!files || !files.length) return;
+  if (slot === 'pdf' || slot === 'excel') S[slot] = [files[0]];
+  else for (const f of files) S[slot].push(f);
+  renderChips(slot);
+  checkReady();
+}
+
+function remove(slot, i) {
+  S[slot].splice(i, 1);
+  renderChips(slot);
+  checkReady();
+}
+
+const ICONS = { fotos: '🖼️', pdf: '📄', excel: '📊' };
+
+function renderChips(slot) {
+  document.getElementById('chips-'+slot).innerHTML = S[slot].map((f, i) =>
+    `<div class="chip">
+      <span class="chip-icon">${ICONS[slot]}</span>
+      <span class="chip-name">${f.name}</span>
+      <span class="chip-rm" onclick="event.stopPropagation();remove('${slot}',${i})">✕</span>
+    </div>`
+  ).join('');
+}
+
+function checkReady() {
+  document.getElementById('btn').disabled =
+    !(S.fotos.length && S.pdf.length && S.excel.length);
+}
+
+function setStatus(tipo, html) {
+  const el = document.getElementById('status');
+  el.className = 'status visible ' + tipo;
+  el.innerHTML = html;
+}
+
+async function generar() {
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Procesando...';
+
+  const stepLabels = [
+    'Analizando fotos de stock',
+    'Leyendo el PDF planificado',
+    'Procesando estadísticas de ventas',
+    'Calculando stock real',
+    'Generando archivo Excel'
+  ];
+
+  function stepsHtml(active) {
+    return '<ul class="steps">' + stepLabels.map((l, i) => {
+      const cls = i < active ? 'step-done' : i === active ? 'step-active' : 'step-pending';
+      return `<li class="${cls}"><div class="dot"></div>${l}</li>`;
+    }).join('') + '</ul>';
+  }
+
+  setStatus('info', stepsHtml(0));
+
+  try {
+    const fd = new FormData();
+    for (const f of S.fotos) fd.append('fotos', f);
+    fd.append('pdf', S.pdf[0]);
+    fd.append('excel', S.excel[0]);
+
+    setStatus('info', stepsHtml(2));
+
+    const res = await fetch('/generar', { method: 'POST', body: fd });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Error desconocido' }));
+      throw new Error(err.error || 'Error del servidor');
+    }
+
+    setStatus('info', stepsHtml(4));
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    setStatus('success',
+      `✅ <strong>Reporte generado con éxito.</strong><br>
+       <a class="dl-btn" href="${url}" download="Reporte_Control_Stock_Actualizado.xlsx">
+         ⬇️ Descargar Excel
+       </a>`
+    );
+
+    btn.innerHTML = '✅ Listo — podés generar otro';
+    btn.style.background = '#145a32';
+    btn.disabled = false;
+
+  } catch (err) {
+    setStatus('error', '❌ <strong>Error:</strong> ' + err.message);
+    btn.innerHTML = '✨ Generar reporte';
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
